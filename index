@@ -1,1 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dorm Move-In Grocery Board</title>
+<style>
+  :root{
+    --gingham:#3A6FB7;
+    --ink:#26314a;
+    --manila:#ffffff;
+    --manila-line:#c9d6ea;
+    --note-1:#F3B6C2;
+    --note-2:#AFD3E6;
+    --note-3:#FBE4B5;
+    --note-4:#C9E4CA;
+    --note-5:#E8C1DE;
+    --note-6:#9FD8D0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100%;
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink);
+    padding:32px 18px 70px;
+    background-color:#eef4fb;
+    background-image:
+      linear-gradient(90deg, color-mix(in srgb, var(--gingham) 45%, transparent) 50%, transparent 50%),
+      linear-gradient(color-mix(in srgb, var(--gingham) 45%, transparent) 50%, transparent 50%);
+    background-size:26px 26px;
+    background-blend-mode:multiply;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
 
+  /* ---------- header plaque ---------- */
+  .board-header{
+    position:relative;
+    max-width:520px;
+    margin:0 auto 56px;
+    background:var(--manila);
+    border:1px solid var(--manila-line);
+    padding:20px 26px 22px;
+    box-shadow:5px 8px 16px rgba(20,40,70,.25);
+    transform:rotate(-1.2deg);
+  }
+  .pin{
+    position:absolute; top:-9px; left:50%; transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #ff8a7a, #c0392b 55%, #7a1f16);
+    box-shadow:0 3px 4px rgba(0,0,0,.45);
+    z-index:3;
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:#5c6a8a; font-weight:700; margin:6px 0 2px; text-align:center;
+  }
+  h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:clamp(22px,4vw,28px);
+    margin:0 0 14px; text-align:center; letter-spacing:.01em;
+  }
+  .stat-row{
+    display:flex; align-items:center; gap:14px; justify-content:center; flex-wrap:wrap;
+  }
+  .stat-row .big{font-size:24px; font-weight:800; font-family:Georgia,serif;}
+  .stat-row .label{font-size:11px; color:#5c6a8a;}
+  .bar-track{
+    flex:1 1 140px; max-width:220px;
+    height:9px; background:#e3ecf7; border:1px solid var(--manila-line);
+    border-radius:5px; overflow:hidden;
+  }
+  .bar-fill{height:100%; width:0%; background:var(--gingham); transition:width .35s ease;}
+
+  /* ---------- settings toggle ---------- */
+  .settings-toggle{
+    position:fixed; top:14px; right:14px;
+    background:var(--manila); border:1px solid var(--manila-line);
+    border-radius:20px; padding:7px 14px; font-size:12px; cursor:pointer;
+    box-shadow:2px 3px 8px rgba(20,40,70,.25); z-index:20; font-weight:600;
+  }
+  .settings-panel{
+    position:fixed; top:52px; right:14px;
+    background:var(--manila); border:1px solid var(--manila-line);
+    border-radius:8px; padding:14px 16px; box-shadow:3px 5px 14px rgba(20,40,70,.3);
+    z-index:20; display:none; width:210px;
+  }
+  .settings-panel.open{display:block;}
+  .settings-panel h3{margin:0 0 8px; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:#5c6a8a;}
+  .palette-row{
+    display:flex; align-items:center; gap:10px; margin-bottom:8px;
+    padding:5px 6px; border-radius:6px; cursor:pointer; border:1px solid transparent;
+  }
+  .palette-row:hover{background:#f2f6fc;}
+  .palette-row.active{border-color:var(--gingham); background:#eaf1fb;}
+  .palette-dots{display:flex;}
+  .palette-dots span{
+    width:14px; height:14px; border-radius:50%; margin-left:-4px;
+    border:1px solid rgba(0,0,0,.15);
+  }
+  .palette-dots span:first-child{margin-left:0;}
+  .palette-name{font-size:12px;}
+  .advanced-toggle{
+    font-size:11px; color:#5c6a8a; text-decoration:underline; cursor:pointer;
+    margin-top:6px; display:inline-block;
+  }
+  .swatch-row{display:flex; align-items:center; justify-content:space-between; margin:6px 0; font-size:12px;}
+  .swatch-row input[type=color]{width:34px; height:22px; border:none; padding:0; background:none; cursor:pointer;}
+  #advancedSwatches{display:none; border-top:1px solid var(--manila-line); margin-top:8px; padding-top:8px;}
+  #advancedSwatches.open{display:block;}
+
+  /* ---------- board grid ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:46px 34px;
+    padding-top:6px;
+  }
+
+  .note-wrap{
+    position:relative;
+    display:grid;
+    grid-template-areas:"n";
+  }
+  .note-bg{
+    grid-area:n;
+    z-index:0;
+    border-radius:2px;
+  }
+  .note-content{
+    grid-area:n;
+    z-index:1;
+    padding:26px 18px 16px;
+    color:#26314a;
+  }
+  .pin.small{width:13px;height:13px; top:-6px;}
+
+  .note-content h2{
+    font-family:Georgia,serif;
+    font-size:16px; margin:0 0 2px; text-align:center;
+  }
+  .note-content .count{
+    font-size:10.5px; text-align:center; color:#3c4966; opacity:.75;
+    margin-bottom:10px; font-family:'Courier New',monospace;
+  }
+  ul{list-style:none; margin:0; padding:0;}
+  li{
+    display:flex; align-items:flex-start; gap:8px;
+    padding:5px 1px;
+    border-bottom:1px dashed rgba(38,49,74,.25);
+    font-size:13.5px; line-height:1.32;
+  }
+  li:last-child{border-bottom:none;}
+  li input[type=checkbox]{
+    appearance:none; -webkit-appearance:none;
+    width:16px; height:16px; min-width:16px;
+    border:1.5px solid rgba(38,49,74,.55);
+    border-radius:4px; margin-top:1px; cursor:pointer;
+    position:relative; background:rgba(255,255,255,.6);
+  }
+  li input[type=checkbox]:checked{background:#3c4966; border-color:#3c4966;}
+  li input[type=checkbox]:checked::after{
+    content:""; position:absolute; left:4.5px; top:1px;
+    width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0;
+    transform:rotate(40deg);
+  }
+  li label{cursor:pointer; flex:1;}
+  li.checked label{ opacity:.55; text-decoration:line-through; }
+
+  .add-row{display:flex; gap:5px; margin-top:10px;}
+  .add-row input{
+    flex:1; border:1px solid rgba(38,49,74,.35); border-radius:5px;
+    padding:5px 7px; font-size:12px; font-family:inherit; background:rgba(255,255,255,.65);
+  }
+  .add-row button{
+    background:rgba(255,255,255,.6); border:1px solid rgba(38,49,74,.4);
+    color:#26314a; border-radius:5px; padding:5px 9px; font-size:12px;
+    cursor:pointer; font-weight:700;
+  }
+  .add-row button:hover{background:#fff;}
+
+  .reset-wrap{ text-align:center; margin-top:50px; }
+  .reset-wrap button{
+    background:var(--manila); border:1px solid var(--manila-line); color:#5c6a8a;
+    border-radius:20px; padding:9px 20px; font-size:12px; cursor:pointer;
+    box-shadow:2px 3px 8px rgba(20,40,70,.2);
+  }
+  .reset-wrap button:hover{color:var(--ink);}
+
+  @media (max-width:480px){
+    .settings-panel{right:8px; top:48px;}
+    .settings-toggle{right:8px;}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="crinkle1" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9"/>
+    </filter>
+    <filter id="crinkle2" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="10"/>
+    </filter>
+    <filter id="crinkle3" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="27" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="8"/>
+    </filter>
+    <filter id="crinkle4" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.055" numOctaves="2" seed="41" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="9"/>
+    </filter>
+    <filter id="crinkle5" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.048" numOctaves="2" seed="58" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="10"/>
+    </filter>
+    <filter id="crinkle6" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.042" numOctaves="2" seed="72" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="8"/>
+    </filter>
+  </defs>
+</svg>
+
+<button class="settings-toggle" id="settingsToggle">🎨 Palette</button>
+<div class="settings-panel" id="settingsPanel">
+  <h3>Note colors</h3>
+  <div id="paletteList"></div>
+  <span class="advanced-toggle" id="advancedToggle">Fine-tune individual shades</span>
+  <div id="advancedSwatches">
+    <div class="swatch-row"><span>Note 1</span><input type="color" data-var="--note-1" value="#F3B6C2"></div>
+    <div class="swatch-row"><span>Note 2</span><input type="color" data-var="--note-2" value="#AFD3E6"></div>
+    <div class="swatch-row"><span>Note 3</span><input type="color" data-var="--note-3" value="#FBE4B5"></div>
+    <div class="swatch-row"><span>Note 4</span><input type="color" data-var="--note-4" value="#C9E4CA"></div>
+    <div class="swatch-row"><span>Note 5</span><input type="color" data-var="--note-5" value="#E8C1DE"></div>
+    <div class="swatch-row"><span>Note 6</span><input type="color" data-var="--note-6" value="#9FD8D0"></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="board-header">
+    <div class="pin"></div>
+    <div class="eyebrow">Move-in day · grocery run</div>
+    <h1>Dorm Kitchen Starter List</h1>
+    <div class="stat-row">
+      <span class="big" id="statCount">0/0</span>
+      <span class="label">secured</span>
+      <div class="bar-track"><div class="bar-fill" id="statBar"></div></div>
+      <span class="label" id="statPct">0%</span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="reset-wrap">
+    <button id="resetBtn">Uncheck everything</button>
+  </div>
+</div>
+
+<script>
+const categories = [
+  { name: "Pantry Staples", icon:"🥫", note:1, filter:1, rot:-2, items: [
+    "Peanut butter", "Bread / bagels", "Instant oatmeal packets",
+    "Rice (microwaveable cups)", "Pasta + jar sauce", "Cereal + shelf-stable milk",
+    "Crackers", "Olive oil (small bottle)", "Salt & pepper packets",
+    "Honey or jam", "Instant ramen / noodle cups"
+  ]},
+  { name: "Fridge & Freezer", icon:"🧊", note:2, filter:2, rot:1.5, items: [
+    "Milk or milk alternative", "Eggs", "Cheese slices/string cheese",
+    "Yogurt cups", "Butter or margarine", "Deli meat",
+    "Frozen microwavable meals", "Frozen veggies", "Fresh fruit (apples, bananas)",
+    "Baby carrots / veggie snacks", "Condiments (ketchup, mustard, hot sauce)"
+  ]},
+  { name: "Snacks", icon:"🍪", note:3, filter:3, rot:-1, items: [
+    "Granola bars", "Trail mix or nuts", "Chips or pretzels",
+    "Popcorn (microwave)", "Fruit snacks", "Cookies",
+    "Instant mac & cheese cups"
+  ]},
+  { name: "Drinks", icon:"🥤", note:4, filter:4, rot:2, items: [
+    "Bottled water / reusable jug", "Coffee or tea bags",
+    "Powdered drink mix / electrolyte packets", "Juice boxes",
+    "Sparkling water"
+  ]},
+  { name: "Quick Meals", icon:"🍜", note:5, filter:5, rot:-1.8, items: [
+    "Canned soup", "Tortillas", "Canned beans",
+    "Microwave rice bowls", "Protein/nutrition bars", "Applesauce cups"
+  ]},
+  { name: "Paper & Cleaning", icon:"🧻", note:6, filter:6, rot:1.2, items: [
+    "Paper towels", "Napkins", "Paper plates / bowls",
+    "Plastic utensils", "Dish soap", "Sponge",
+    "Disinfecting wipes", "Small trash bags", "Ziploc bags"
+  ]},
+];
+
+const palettes = [
+  { name:"Pastel Beach", colors:["#F3B6C2","#AFD3E6","#FBE4B5","#C9E4CA","#E8C1DE","#9FD8D0"] },
+  { name:"Sage Greens",  colors:["#7FA678","#5E8C61","#A3C08A","#4C7A5A","#8FBB8A","#6B9B6E"] },
+  { name:"Sunset",       colors:["#F4A261","#E76F51","#F1C0A0","#E9C46A","#F7D9C4","#EE8959"] },
+  { name:"Ocean",        colors:["#5B9BD5","#2E75B6","#9DC3E6","#1F4E79","#7EA6D8","#BDD7EE"] },
+];
+
+const grid = document.getElementById('grid');
+const state = {};
+
+function slug(cat, item){ return (cat+'-'+item).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function render(){
+  grid.innerHTML = '';
+  categories.forEach(cat => {
+    const noteWrap = document.createElement('div');
+    noteWrap.className = 'note-wrap';
+    noteWrap.style.transform = `rotate(${cat.rot}deg)`;
+
+    const pin = document.createElement('div');
+    pin.className = 'pin small';
+    noteWrap.appendChild(pin);
+
+    const bg = document.createElement('div');
+    bg.className = 'note-bg';
+    bg.style.background = `var(--note-${cat.note})`;
+    bg.style.filter = `url(#crinkle${cat.filter})`;
+    bg.style.boxShadow = '4px 7px 14px rgba(20,40,70,.3)';
+    noteWrap.appendChild(bg);
+
+    const content = document.createElement('div');
+    content.className = 'note-content';
+
+    const h2 = document.createElement('h2');
+    h2.textContent = cat.icon + ' ' + cat.name;
+    content.appendChild(h2);
+
+    const countEl = document.createElement('div');
+    countEl.className = 'count';
+    content.appendChild(countEl);
+
+    const ul = document.createElement('ul');
+    cat.items.forEach(item => {
+      const id = slug(cat.name, item);
+      if(!(id in state)) state[id] = false;
+      const li = document.createElement('li');
+      li.className = state[id] ? 'checked' : '';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = state[id];
+      cb.id = id;
+      cb.addEventListener('change', ()=>{
+        state[id] = cb.checked;
+        li.className = cb.checked ? 'checked' : '';
+        updateStats();
+      });
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.textContent = item;
+      li.appendChild(cb);
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+    content.appendChild(ul);
+
+    const addRow = document.createElement('div');
+    addRow.className = 'add-row';
+    const input = document.createElement('input');
+    input.placeholder = 'Add item';
+    const btn = document.createElement('button');
+    btn.textContent = '+';
+    btn.addEventListener('click', ()=>{
+      const val = input.value.trim();
+      if(!val) return;
+      cat.items.push(val);
+      input.value='';
+      render();
+    });
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') btn.click(); });
+    addRow.appendChild(input);
+    addRow.appendChild(btn);
+    content.appendChild(addRow);
+
+    countEl.textContent = cat.items.length + ' items';
+    noteWrap.appendChild(content);
+    grid.appendChild(noteWrap);
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const ids = Object.keys(state);
+  const total = ids.length;
+  const done = ids.filter(id=>state[id]).length;
+  document.getElementById('statCount').textContent = done + '/' + total;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('statPct').textContent = pct + '%';
+  document.getElementById('statBar').style.width = pct + '%';
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  Object.keys(state).forEach(id=>state[id]=false);
+  render();
+});
+
+// ---- palette switcher ----
+const paletteList = document.getElementById('paletteList');
+let activePalette = 0;
+
+function applyPalette(idx){
+  activePalette = idx;
+  palettes[idx].colors.forEach((c,i)=>{
+    document.documentElement.style.setProperty(`--note-${i+1}`, c);
+    const swatchInput = document.querySelector(`input[data-var="--note-${i+1}"]`);
+    if(swatchInput) swatchInput.value = c;
+  });
+  renderPaletteList();
+}
+
+function renderPaletteList(){
+  paletteList.innerHTML = '';
+  palettes.forEach((p, idx)=>{
+    const row = document.createElement('div');
+    row.className = 'palette-row' + (idx===activePalette ? ' active' : '');
+    const dots = document.createElement('div');
+    dots.className = 'palette-dots';
+    p.colors.forEach(c=>{
+      const dot = document.createElement('span');
+      dot.style.background = c;
+      dots.appendChild(dot);
+    });
+    const name = document.createElement('span');
+    name.className = 'palette-name';
+    name.textContent = p.name;
+    row.appendChild(dots);
+    row.appendChild(name);
+    row.addEventListener('click', ()=> applyPalette(idx));
+    paletteList.appendChild(row);
+  });
+}
+renderPaletteList();
+
+// settings panel
+const toggle = document.getElementById('settingsToggle');
+const panel = document.getElementById('settingsPanel');
+toggle.addEventListener('click', ()=> panel.classList.toggle('open'));
+
+document.getElementById('advancedToggle').addEventListener('click', ()=>{
+  document.getElementById('advancedSwatches').classList.toggle('open');
+});
+
+panel.querySelectorAll('input[type=color]').forEach(inp=>{
+  inp.addEventListener('input', ()=>{
+    document.documentElement.style.setProperty(inp.dataset.var, inp.value);
+  });
+});
+
+render();
+</script>
+</body>
+</html>
