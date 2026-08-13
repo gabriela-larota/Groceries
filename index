@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dorm Move-In Grocery Board</title>
+<title>Dorm Board</title>
 <style>
   :root{
     --gingham:#3A6FB7;
@@ -23,7 +23,7 @@
     min-height:100%;
     font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
     color:var(--ink);
-    padding:32px 18px 70px;
+    padding:32px 18px 90px;
     background-color:#eef4fb;
     background-image:
       linear-gradient(90deg, color-mix(in srgb, var(--gingham) 45%, transparent) 50%, transparent 50%),
@@ -31,13 +31,13 @@
     background-size:26px 26px;
     background-blend-mode:multiply;
   }
-  .wrap{max-width:1000px;margin:0 auto;}
+  .wrap{max-width:1100px;margin:0 auto;}
 
   /* ---------- header plaque ---------- */
   .board-header{
     position:relative;
     max-width:520px;
-    margin:0 auto 56px;
+    margin:0 auto 40px;
     background:var(--manila);
     border:1px solid var(--manila-line);
     padding:20px 26px 22px;
@@ -71,19 +71,22 @@
     border-radius:5px; overflow:hidden;
   }
   .bar-fill{height:100%; width:0%; background:var(--gingham); transition:width .35s ease;}
+  .hint{
+    text-align:center; font-size:11px; color:#5c6a8a; margin-top:8px; opacity:.85;
+  }
 
   /* ---------- settings toggle ---------- */
   .settings-toggle{
     position:fixed; top:14px; right:14px;
     background:var(--manila); border:1px solid var(--manila-line);
     border-radius:20px; padding:7px 14px; font-size:12px; cursor:pointer;
-    box-shadow:2px 3px 8px rgba(20,40,70,.25); z-index:20; font-weight:600;
+    box-shadow:2px 3px 8px rgba(20,40,70,.25); z-index:50; font-weight:600;
   }
   .settings-panel{
     position:fixed; top:52px; right:14px;
     background:var(--manila); border:1px solid var(--manila-line);
     border-radius:8px; padding:14px 16px; box-shadow:3px 5px 14px rgba(20,40,70,.3);
-    z-index:20; display:none; width:210px;
+    z-index:50; display:none; width:210px;
   }
   .settings-panel.open{display:block;}
   .settings-panel h3{margin:0 0 8px; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:#5c6a8a;}
@@ -109,68 +112,115 @@
   #advancedSwatches{display:none; border-top:1px solid var(--manila-line); margin-top:8px; padding-top:8px;}
   #advancedSwatches.open{display:block;}
 
-  /* ---------- board grid ---------- */
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:46px 34px;
-    padding-top:6px;
+  /* ---------- add-note fab ---------- */
+  .fab{
+    position:fixed; bottom:20px; left:20px;
+    background:var(--gingham); color:#fff; border:none;
+    border-radius:24px; padding:12px 18px; font-size:13px; font-weight:700;
+    cursor:pointer; box-shadow:2px 4px 12px rgba(20,40,70,.4); z-index:50;
+  }
+  .fab:hover{filter:brightness(1.08);}
+
+  /* ---------- board ---------- */
+  .board{
+    position:relative;
+    min-height:760px;
   }
 
   .note-wrap{
-    position:relative;
-    display:grid;
-    grid-template-areas:"n";
-  }
-  .note-bg{
-    grid-area:n;
-    z-index:0;
+    position:absolute;
+    min-width:200px;
+    min-height:170px;
+    overflow:hidden;
     border-radius:2px;
   }
+  .note-wrap::before{
+    content:"";
+    position:absolute; inset:0;
+    z-index:0;
+    box-shadow:4px 7px 14px rgba(20,40,70,.3);
+    border-radius:2px;
+  }
+  .pin.small{width:13px;height:13px; top:-6px; position:absolute; left:50%; transform:translateX(-50%); z-index:3;}
+
   .note-content{
-    grid-area:n;
-    z-index:1;
-    padding:26px 18px 16px;
+    position:relative; z-index:1;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    padding:24px 16px 10px;
     color:#26314a;
   }
-  .pin.small{width:13px;height:13px; top:-6px;}
+  .note-header{cursor:grab; user-select:none; flex:0 0 auto;}
+  .note-header:active{cursor:grabbing;}
+  .item-list{
+    flex:1 1 auto;
+    overflow-y:auto;
+    min-height:0;
+    padding-right:2px;
+  }
+  .add-row{flex:0 0 auto;}
 
+  .resize-handle{
+    position:absolute; right:2px; bottom:2px;
+    width:18px; height:18px;
+    z-index:4;
+    cursor:se-resize;
+    touch-action:none;
+  }
+  .resize-handle::before{
+    content:"";
+    position:absolute; right:2px; bottom:2px;
+    width:10px; height:10px;
+    background-image:
+      linear-gradient(135deg, transparent 0 40%, rgba(38,49,74,.55) 40% 46%, transparent 46% 60%, rgba(38,49,74,.55) 60% 66%, transparent 66% 80%, rgba(38,49,74,.55) 80% 86%, transparent 86%);
+  }
   .note-content h2{
     font-family:Georgia,serif;
-    font-size:16px; margin:0 0 2px; text-align:center;
+    font-size:15px; margin:0 0 2px; text-align:center;
+    outline:none; padding:2px 4px; border-radius:4px;
+  }
+  .note-content h2[contenteditable="true"]{
+    background:rgba(255,255,255,.6); cursor:text;
   }
   .note-content .count{
-    font-size:10.5px; text-align:center; color:#3c4966; opacity:.75;
-    margin-bottom:10px; font-family:'Courier New',monospace;
+    font-size:10px; text-align:center; color:#3c4966; opacity:.75;
+    margin-bottom:8px; font-family:'Courier New',monospace;
   }
   ul{list-style:none; margin:0; padding:0;}
   li{
     display:flex; align-items:flex-start; gap:8px;
     padding:5px 1px;
     border-bottom:1px dashed rgba(38,49,74,.25);
-    font-size:13.5px; line-height:1.32;
+    font-size:13px; line-height:1.3;
   }
   li:last-child{border-bottom:none;}
   li input[type=checkbox]{
     appearance:none; -webkit-appearance:none;
-    width:16px; height:16px; min-width:16px;
+    width:15px; height:15px; min-width:15px;
     border:1.5px solid rgba(38,49,74,.55);
     border-radius:4px; margin-top:1px; cursor:pointer;
     position:relative; background:rgba(255,255,255,.6);
   }
   li input[type=checkbox]:checked{background:#3c4966; border-color:#3c4966;}
   li input[type=checkbox]:checked::after{
-    content:""; position:absolute; left:4.5px; top:1px;
-    width:4px; height:8px; border:solid #fff; border-width:0 2px 2px 0;
+    content:""; position:absolute; left:4px; top:1px;
+    width:4px; height:7px; border:solid #fff; border-width:0 2px 2px 0;
     transform:rotate(40deg);
   }
   li label{cursor:pointer; flex:1;}
   li.checked label{ opacity:.55; text-decoration:line-through; }
+  .del-item{
+    background:none; border:none; color:rgba(38,49,74,.45); cursor:pointer;
+    font-size:13px; line-height:1; padding:0 2px;
+  }
+  .del-item:hover{color:#a83232;}
 
-  .add-row{display:flex; gap:5px; margin-top:10px;}
+  .add-row{display:flex; gap:5px; margin-top:8px;}
   .add-row input{
     flex:1; border:1px solid rgba(38,49,74,.35); border-radius:5px;
     padding:5px 7px; font-size:12px; font-family:inherit; background:rgba(255,255,255,.65);
+    min-width:0;
   }
   .add-row button{
     background:rgba(255,255,255,.6); border:1px solid rgba(38,49,74,.4);
@@ -179,7 +229,14 @@
   }
   .add-row button:hover{background:#fff;}
 
-  .reset-wrap{ text-align:center; margin-top:50px; }
+  .note-delete{
+    position:absolute; top:2px; right:4px; z-index:2;
+    background:none; border:none; color:rgba(38,49,74,.4);
+    font-size:14px; cursor:pointer; line-height:1;
+  }
+  .note-delete:hover{color:#a83232;}
+
+  .reset-wrap{ text-align:center; margin-top:40px; }
   .reset-wrap button{
     background:var(--manila); border:1px solid var(--manila-line); color:#5c6a8a;
     border-radius:20px; padding:9px 20px; font-size:12px; cursor:pointer;
@@ -190,6 +247,7 @@
   @media (max-width:480px){
     .settings-panel{right:8px; top:48px;}
     .settings-toggle{right:8px;}
+    .fab{left:8px; bottom:14px; padding:10px 14px; font-size:12px;}
   }
 </style>
 </head>
@@ -239,6 +297,8 @@
   </div>
 </div>
 
+<button class="fab" id="addNoteBtn">+ New sticky note</button>
+
 <div class="wrap">
 
   <div class="board-header">
@@ -251,44 +311,45 @@
       <div class="bar-track"><div class="bar-fill" id="statBar"></div></div>
       <span class="label" id="statPct">0%</span>
     </div>
+    <div class="hint">Drag a note by its title to move it · drag the bottom-right corner to resize · double-click a title to rename</div>
   </div>
 
-  <div class="grid" id="grid"></div>
+  <div class="board" id="board"></div>
 
-  <div class="reset-wrap">
-    <button id="resetBtn">Uncheck everything</button>
-  </div>
+</div>
+<div class="reset-wrap">
+  <button id="resetBtn">Uncheck everything</button>
 </div>
 
 <script>
-const categories = [
-  { name: "Pantry Staples", icon:"🥫", note:1, filter:1, rot:-2, items: [
+let categories = [
+  { id:"pantry", name: "Pantry Staples", icon:"🥫", note:1, filter:1, items: [
     "Peanut butter", "Bread / bagels", "Instant oatmeal packets",
     "Rice (microwaveable cups)", "Pasta + jar sauce", "Cereal + shelf-stable milk",
     "Crackers", "Olive oil (small bottle)", "Salt & pepper packets",
     "Honey or jam", "Instant ramen / noodle cups"
   ]},
-  { name: "Fridge & Freezer", icon:"🧊", note:2, filter:2, rot:1.5, items: [
+  { id:"fridge", name: "Fridge & Freezer", icon:"🧊", note:2, filter:2, items: [
     "Milk or milk alternative", "Eggs", "Cheese slices/string cheese",
     "Yogurt cups", "Butter or margarine", "Deli meat",
     "Frozen microwavable meals", "Frozen veggies", "Fresh fruit (apples, bananas)",
     "Baby carrots / veggie snacks", "Condiments (ketchup, mustard, hot sauce)"
   ]},
-  { name: "Snacks", icon:"🍪", note:3, filter:3, rot:-1, items: [
+  { id:"snacks", name: "Snacks", icon:"🍪", note:3, filter:3, items: [
     "Granola bars", "Trail mix or nuts", "Chips or pretzels",
     "Popcorn (microwave)", "Fruit snacks", "Cookies",
     "Instant mac & cheese cups"
   ]},
-  { name: "Drinks", icon:"🥤", note:4, filter:4, rot:2, items: [
+  { id:"drinks", name: "Drinks", icon:"🥤", note:4, filter:4, items: [
     "Bottled water / reusable jug", "Coffee or tea bags",
     "Powdered drink mix / electrolyte packets", "Juice boxes",
     "Sparkling water"
   ]},
-  { name: "Quick Meals", icon:"🍜", note:5, filter:5, rot:-1.8, items: [
+  { id:"meals", name: "Quick Meals", icon:"🍜", note:5, filter:5, items: [
     "Canned soup", "Tortillas", "Canned beans",
     "Microwave rice bowls", "Protein/nutrition bars", "Applesauce cups"
   ]},
-  { name: "Paper & Cleaning", icon:"🧻", note:6, filter:6, rot:1.2, items: [
+  { id:"cleaning", name: "Paper & Cleaning", icon:"🧻", note:6, filter:6, items: [
     "Paper towels", "Napkins", "Paper plates / bowls",
     "Plastic utensils", "Dish soap", "Sponge",
     "Disinfecting wipes", "Small trash bags", "Ziploc bags"
@@ -302,60 +363,145 @@ const palettes = [
   { name:"Ocean",        colors:["#5B9BD5","#2E75B6","#9DC3E6","#1F4E79","#7EA6D8","#BDD7EE"] },
 ];
 
-const grid = document.getElementById('grid');
-const state = {};
+const board = document.getElementById('board');
+const checkState = {};   // itemId -> boolean
+const pos = {};          // catId -> {x,y,w,h,rot,z}
+let zTop = 1;
+let noteCounter = 0;
 
-function slug(cat, item){ return (cat+'-'+item).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+function itemId(cat, item, idx){ return cat.id + '::' + idx + '::' + item.toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function initialLayout(){
+  const cols = 3, colW = 260, rowH = 320, gapX = 34, gapY = 46, startX = 20, startY = 10;
+  categories.forEach((cat, i)=>{
+    if(pos[cat.id]) return;
+    const col = i % cols, row = Math.floor(i / cols);
+    pos[cat.id] = {
+      x: startX + col*(colW+gapX),
+      y: startY + row*(rowH+gapY),
+      w: colW,
+      h: rowH,
+      rot: (i % 2 === 0 ? -1 : 1) * (1 + (i % 3)),
+      z: ++zTop
+    };
+  });
+}
+
+function updateBoardHeight(){
+  let maxBottom = 400;
+  Object.values(pos).forEach(p=>{
+    maxBottom = Math.max(maxBottom, p.y + p.h);
+  });
+  board.style.height = (maxBottom + 60) + 'px';
+}
 
 function render(){
-  grid.innerHTML = '';
+  board.innerHTML = '';
   categories.forEach(cat => {
+    const p = pos[cat.id];
     const noteWrap = document.createElement('div');
     noteWrap.className = 'note-wrap';
-    noteWrap.style.transform = `rotate(${cat.rot}deg)`;
+    noteWrap.style.left = p.x + 'px';
+    noteWrap.style.top = p.y + 'px';
+    noteWrap.style.width = p.w + 'px';
+    noteWrap.style.height = p.h + 'px';
+    noteWrap.style.transform = `rotate(${p.rot}deg)`;
+    noteWrap.style.zIndex = p.z;
+    noteWrap.style.setProperty('--bgc', `var(--note-${cat.note})`);
+    noteWrap.style.setProperty('background', 'transparent');
+
+    // crinkle bg via before pseudo needs actual CSS var per element -> use inline style tag workaround
+    const styleTag = document.createElement('style');
+    const uid = 'nw_' + cat.id;
+    noteWrap.classList.add(uid);
+    styleTag.textContent = `.${uid}::before{ background: var(--note-${cat.note}); filter: url(#crinkle${cat.filter}); }`;
+    noteWrap.appendChild(styleTag);
+
+    const delNoteBtn = document.createElement('button');
+    delNoteBtn.className = 'note-delete';
+    delNoteBtn.textContent = '✕';
+    delNoteBtn.title = 'Delete this sticky note';
+    delNoteBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      categories = categories.filter(c=>c.id!==cat.id);
+      delete pos[cat.id];
+      render();
+    });
+    noteWrap.appendChild(delNoteBtn);
 
     const pin = document.createElement('div');
     pin.className = 'pin small';
     noteWrap.appendChild(pin);
 
-    const bg = document.createElement('div');
-    bg.className = 'note-bg';
-    bg.style.background = `var(--note-${cat.note})`;
-    bg.style.filter = `url(#crinkle${cat.filter})`;
-    bg.style.boxShadow = '4px 7px 14px rgba(20,40,70,.3)';
-    noteWrap.appendChild(bg);
-
     const content = document.createElement('div');
     content.className = 'note-content';
 
+    const header = document.createElement('div');
+    header.className = 'note-header';
+
     const h2 = document.createElement('h2');
     h2.textContent = cat.icon + ' ' + cat.name;
-    content.appendChild(h2);
+    h2.addEventListener('dblclick', (e)=>{
+      e.stopPropagation();
+      h2.contentEditable = 'true';
+      h2.focus();
+      document.execCommand('selectAll', false, null);
+    });
+    h2.addEventListener('blur', ()=>{
+      h2.contentEditable = 'false';
+      const txt = h2.textContent.trim() || (cat.icon + ' ' + cat.name);
+      h2.textContent = txt;
+      cat.name = txt.replace(/^\S+\s*/, ''); // strip leading icon+space best-effort
+    });
+    h2.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){ e.preventDefault(); h2.blur(); }
+    });
+    header.appendChild(h2);
 
     const countEl = document.createElement('div');
     countEl.className = 'count';
-    content.appendChild(countEl);
+    countEl.textContent = cat.items.length + ' items';
+    header.appendChild(countEl);
+
+    header.addEventListener('pointerdown', (e)=>{
+      if(h2.isContentEditable) return;
+      startDrag(e, cat.id, noteWrap);
+    });
+
+    content.appendChild(header);
 
     const ul = document.createElement('ul');
-    cat.items.forEach(item => {
-      const id = slug(cat.name, item);
-      if(!(id in state)) state[id] = false;
+    ul.className = 'item-list';
+    cat.items.forEach((item, idx) => {
+      const id = itemId(cat, item, idx);
+      if(!(id in checkState)) checkState[id] = false;
       const li = document.createElement('li');
-      li.className = state[id] ? 'checked' : '';
+      li.className = checkState[id] ? 'checked' : '';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.checked = state[id];
-      cb.id = id;
+      cb.checked = checkState[id];
+      const cbId = id + '-cb';
+      cb.id = cbId;
       cb.addEventListener('change', ()=>{
-        state[id] = cb.checked;
+        checkState[id] = cb.checked;
         li.className = cb.checked ? 'checked' : '';
         updateStats();
       });
       const label = document.createElement('label');
-      label.setAttribute('for', id);
+      label.setAttribute('for', cbId);
       label.textContent = item;
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-item';
+      delBtn.textContent = '×';
+      delBtn.title = 'Remove item';
+      delBtn.addEventListener('click', ()=>{
+        cat.items.splice(idx,1);
+        delete checkState[id];
+        render();
+      });
       li.appendChild(cb);
       li.appendChild(label);
+      li.appendChild(delBtn);
       ul.appendChild(li);
     });
     content.appendChild(ul);
@@ -378,17 +524,76 @@ function render(){
     addRow.appendChild(btn);
     content.appendChild(addRow);
 
-    countEl.textContent = cat.items.length + ' items';
     noteWrap.appendChild(content);
-    grid.appendChild(noteWrap);
+
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    handle.addEventListener('pointerdown', (e)=> startResize(e, cat.id, noteWrap));
+    noteWrap.appendChild(handle);
+
+    board.appendChild(noteWrap);
   });
+  updateBoardHeight();
   updateStats();
 }
 
+function startDrag(e, catId, el){
+  e.preventDefault();
+  const p = pos[catId];
+  p.z = ++zTop;
+  el.style.zIndex = p.z;
+  const boardRect = board.getBoundingClientRect();
+  const startX = e.clientX, startY = e.clientY;
+  const origX = p.x, origY = p.y;
+
+  function onMove(ev){
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    p.x = Math.max(0, origX + dx);
+    p.y = Math.max(0, origY + dy);
+    el.style.left = p.x + 'px';
+    el.style.top = p.y + 'px';
+    updateBoardHeight();
+  }
+  function onUp(){
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+
+function startResize(e, catId, el){
+  e.preventDefault();
+  e.stopPropagation();
+  const p = pos[catId];
+  p.z = ++zTop;
+  el.style.zIndex = p.z;
+  const startX = e.clientX, startY = e.clientY;
+  const origW = p.w, origH = p.h;
+  const minW = 200, minH = 170;
+
+  function onMove(ev){
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    p.w = Math.max(minW, origW + dx);
+    p.h = Math.max(minH, origH + dy);
+    el.style.width = p.w + 'px';
+    el.style.height = p.h + 'px';
+    updateBoardHeight();
+  }
+  function onUp(){
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+  }
+  document.addEventListener('pointermove', onMove);
+  document.addEventListener('pointerup', onUp);
+}
+
 function updateStats(){
-  const ids = Object.keys(state);
+  const ids = Object.keys(checkState);
   const total = ids.length;
-  const done = ids.filter(id=>state[id]).length;
+  const done = ids.filter(id=>checkState[id]).length;
   document.getElementById('statCount').textContent = done + '/' + total;
   const pct = total ? Math.round(done/total*100) : 0;
   document.getElementById('statPct').textContent = pct + '%';
@@ -396,7 +601,27 @@ function updateStats(){
 }
 
 document.getElementById('resetBtn').addEventListener('click', ()=>{
-  Object.keys(state).forEach(id=>state[id]=false);
+  Object.keys(checkState).forEach(id=>checkState[id]=false);
+  render();
+});
+
+document.getElementById('addNoteBtn').addEventListener('click', ()=>{
+  noteCounter++;
+  const id = 'custom-' + Date.now() + '-' + noteCounter;
+  const noteIdx = ((categories.length) % 6) + 1;
+  const newCat = {
+    id, name: 'New List', icon: '📝', note: noteIdx, filter: noteIdx, items: []
+  };
+  categories.push(newCat);
+  const lastCol = (categories.length - 1) % 3;
+  const lastRow = Math.floor((categories.length - 1) / 3);
+  pos[id] = {
+    x: 20 + lastCol*(260+34) + 12,
+    y: 10 + lastRow*(320+46) + 12,
+    w: 240, h: 260,
+    rot: (Math.random()*4 - 2),
+    z: ++zTop
+  };
   render();
 });
 
@@ -452,6 +677,7 @@ panel.querySelectorAll('input[type=color]').forEach(inp=>{
   });
 });
 
+initialLayout();
 render();
 </script>
 </body>
