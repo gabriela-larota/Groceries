@@ -304,7 +304,7 @@
   <div class="board-header">
     <div class="pin"></div>
     <div class="eyebrow">Move-in day · grocery run</div>
-    <h1>Dorm Kitchen Starter List</h1>
+    <h1>Dorm List</h1>
     <div class="stat-row">
       <span class="big" id="statCount">0/0</span>
       <span class="label">secured</span>
