@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dorm Move-In Grocery List</title>
+<style>
+  :root{
+    --fridge:#F5F4F0;
+    --card:#FFFFFF;
+    --steel:#8E969C;
+    --ink:#2B2B2E;
+    --tape:#FFD966;
+    --tape-dark:#E8BE3D;
+    --accent:#3E7C59;
+    --accent-soft:#E4EFE7;
+    --line:#DEDCD4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--fridge);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--ink);
+    padding:28px 16px 60px;
+  }
+  @font-face{
+    font-family:'Space Grotesk';
+    src:local('Space Grotesk');
+  }
+  .wrap{max-width:920px;margin:0 auto;}
+
+  /* ---- Header / receipt ---- */
+  .receipt{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:22px 26px 26px;
+    position:relative;
+    box-shadow:0 1px 0 var(--line), 0 10px 24px -18px rgba(0,0,0,.35);
+    margin-bottom:34px;
+  }
+  .receipt::after{
+    content:"";
+    position:absolute;
+    left:0;right:0;bottom:-9px;
+    height:18px;
+    background:
+      linear-gradient(135deg, var(--card) 50%, transparent 50%) 0 0/16px 18px repeat-x,
+      linear-gradient(-135deg, var(--card) 50%, transparent 50%) 0 0/16px 18px repeat-x;
+  }
+  .tape{
+    position:absolute; top:-14px; left:38px;
+    width:74px; height:26px;
+    background:var(--tape);
+    border:1px solid var(--tape-dark);
+    transform:rotate(-4deg);
+    opacity:.9;
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--steel); font-weight:600; margin:6px 0 4px;
+  }
+  h1{
+    font-family:'Space Grotesk','Inter',sans-serif;
+    font-size:clamp(26px,4vw,34px);
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .stat-row{
+    display:flex; align-items:baseline; gap:18px; flex-wrap:wrap;
+    font-family:'Courier New',monospace;
+    border-top:1px dashed var(--line);
+    padding-top:14px;
+  }
+  .stat-row .big{font-size:30px; font-weight:700;}
+  .stat-row .label{font-size:12px; color:var(--steel);}
+  .bar-track{
+    flex:1 1 200px; min-width:160px;
+    height:10px; background:var(--line);
+    border-radius:6px; overflow:hidden;
+  }
+  .bar-fill{
+    height:100%; width:0%;
+    background:var(--accent);
+    transition:width .35s ease;
+  }
+
+  /* ---- Category grid ---- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:18px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 18px 14px;
+  }
+  .card h2{
+    font-family:'Space Grotesk','Inter',sans-serif;
+    font-size:16px;
+    margin:0 0 3px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .card .count{
+    font-size:11px; color:var(--steel); font-family:'Courier New',monospace;
+    margin-bottom:10px;
+  }
+  ul{list-style:none; margin:0; padding:0;}
+  li{
+    display:flex; align-items:flex-start; gap:9px;
+    padding:6px 2px;
+    border-bottom:1px solid #F0EFEA;
+    font-size:14px; line-height:1.35;
+  }
+  li:last-child{border-bottom:none;}
+  li input[type=checkbox]{
+    appearance:none; -webkit-appearance:none;
+    width:17px; height:17px; min-width:17px;
+    border:1.5px solid var(--steel);
+    border-radius:4px;
+    margin-top:1px;
+    cursor:pointer;
+    position:relative;
+    background:#fff;
+  }
+  li input[type=checkbox]:checked{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  li input[type=checkbox]:checked::after{
+    content:"";
+    position:absolute; left:5px; top:1px;
+    width:4px; height:9px;
+    border:solid white;
+    border-width:0 2px 2px 0;
+    transform:rotate(40deg);
+  }
+  li label{cursor:pointer; flex:1;}
+  li.checked label{ color:var(--steel); text-decoration:line-through; }
+  li.custom{align-items:center;}
+  .remove-btn{
+    background:none;border:none;color:var(--steel);
+    cursor:pointer; font-size:14px; padding:0 4px; line-height:1;
+  }
+  .remove-btn:hover{color:#B84C4C;}
+
+  .add-row{
+    display:flex; gap:6px; margin-top:12px;
+  }
+  .add-row input{
+    flex:1; border:1px solid var(--line); border-radius:6px;
+    padding:6px 8px; font-size:13px; font-family:inherit;
+  }
+  .add-row button{
+    background:var(--accent-soft); border:1px solid var(--accent);
+    color:var(--accent); border-radius:6px;
+    padding:6px 10px; font-size:13px; cursor:pointer; font-weight:600;
+  }
+  .add-row button:hover{background:var(--accent); color:#fff;}
+
+  .reset-wrap{
+    text-align:center; margin-top:30px;
+  }
+  .reset-wrap button{
+    background:none; border:1px solid var(--steel); color:var(--steel);
+    border-radius:20px; padding:8px 18px; font-size:12px;
+    cursor:pointer; letter-spacing:.04em;
+  }
+  .reset-wrap button:hover{border-color:var(--ink); color:var(--ink);}
+
+  @media (max-width:480px){
+    .receipt{padding:18px 16px 22px;}
+    .card{padding:14px 14px 10px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="receipt">
+    <div class="tape"></div>
+    <div class="eyebrow">Move-in day · grocery run</div>
+    <h1>Dorm Kitchen Starter List</h1>
+    <div class="stat-row">
+      <span class="big" id="statCount">0/0</span>
+      <span class="label">items secured</span>
+      <div class="bar-track"><div class="bar-fill" id="statBar"></div></div>
+      <span class="label" id="statPct">0%</span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="reset-wrap">
+    <button id="resetBtn">Uncheck everything</button>
+  </div>
+</div>
+
+<script>
+const categories = [
+  { name: "Pantry Staples", icon:"🥫", items: [
+    "Peanut butter", "Bread / bagels", "Instant oatmeal packets",
+    "Rice (microwaveable cups)", "Pasta + jar sauce", "Cereal + shelf-stable milk",
+    "Crackers", "Olive oil (small bottle)", "Salt & pepper packets",
+    "Honey or jam", "Instant ramen / noodle cups"
+  ]},
+  { name: "Fridge & Freezer", icon:"🧊", items: [
+    "Milk or milk alternative", "Eggs", "Cheese slices/string cheese",
+    "Yogurt cups", "Butter or margarine", "Deli meat",
+    "Frozen microwavable meals", "Frozen veggies", "Fresh fruit (apples, bananas)",
+    "Baby carrots / veggie snacks", "Condiments (ketchup, mustard, hot sauce)"
+  ]},
+  { name: "Snacks", icon:"🍪", items: [
+    "Granola bars", "Trail mix or nuts", "Chips or pretzels",
+    "Popcorn (microwave)", "Fruit snacks", "Cookies",
+    "Instant mac & cheese cups"
+  ]},
+  { name: "Drinks", icon:"🥤", items: [
+    "Bottled water / reusable jug", "Coffee or tea bags",
+    "Powdered drink mix / electrolyte packets", "Juice boxes",
+    "Sparkling water"
+  ]},
+  { name: "Quick Meals", icon:"🍜", items: [
+    "Canned soup", "Tortillas", "Canned beans",
+    "Microwave rice bowls", "Protein/nutrition bars", "Applesauce cups"
+  ]},
+  { name: "Paper & Cleaning", icon:"🧻", items: [
+    "Paper towels", "Napkins", "Paper plates / bowls",
+    "Plastic utensils", "Dish soap", "Sponge",
+    "Disinfecting wipes", "Small trash bags", "Ziploc bags"
+  ]},
+];
+
+const grid = document.getElementById('grid');
+const state = {}; // id -> boolean
+
+function slug(cat, item){ return (cat+'-'+item).toLowerCase().replace(/[^a-z0-9]+/g,'-'); }
+
+function render(){
+  grid.innerHTML = '';
+  categories.forEach(cat => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    const h2 = document.createElement('h2');
+    h2.textContent = cat.icon + ' ' + cat.name;
+    card.appendChild(h2);
+
+    const countEl = document.createElement('div');
+    countEl.className = 'count';
+    card.appendChild(countEl);
+
+    const ul = document.createElement('ul');
+    cat.items.forEach(item => {
+      const id = slug(cat.name, item);
+      if(!(id in state)) state[id] = false;
+      const li = document.createElement('li');
+      li.className = state[id] ? 'checked' : '';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = state[id];
+      cb.id = id;
+      cb.addEventListener('change', ()=>{
+        state[id] = cb.checked;
+        li.className = cb.checked ? 'checked' : '';
+        updateStats();
+      });
+      const label = document.createElement('label');
+      label.setAttribute('for', id);
+      label.textContent = item;
+      li.appendChild(cb);
+      li.appendChild(label);
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+
+    // custom item add row
+    const addRow = document.createElement('div');
+    addRow.className = 'add-row';
+    const input = document.createElement('input');
+    input.placeholder = 'Add your own item';
+    const btn = document.createElement('button');
+    btn.textContent = 'Add';
+    btn.addEventListener('click', ()=>{
+      const val = input.value.trim();
+      if(!val) return;
+      cat.items.push(val);
+      input.value='';
+      render();
+    });
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') btn.click(); });
+    addRow.appendChild(input);
+    addRow.appendChild(btn);
+    card.appendChild(addRow);
+
+    countEl.textContent = cat.items.length + ' items';
+    grid.appendChild(card);
+  });
+  updateStats();
+}
+
+function updateStats(){
+  const ids = Object.keys(state);
+  const total = ids.length;
+  const done = ids.filter(id=>state[id]).length;
+  document.getElementById('statCount').textContent = done + '/' + total;
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('statPct').textContent = pct + '%';
+  document.getElementById('statBar').style.width = pct + '%';
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  Object.keys(state).forEach(id=>state[id]=false);
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
